@@ -855,6 +855,7 @@ export const reloadAuth = (dispatch, firebase) => {
 /**
  * @description Links the user account with the given credentials. Internally
  * calls `firebase.auth().currentUser.linkWithCredential`.
+ * NOTE: linkWithCredential has been deprecated.
  * @param {Function} dispatch - Action dispatch function
  * @param {Object} firebase - Internal firebase object
  * @param {Object} credential - Credential with which to link user account
@@ -875,6 +876,105 @@ export const linkWithCredential = (dispatch, firebase, credential) => {
     .currentUser.linkWithCredential(credential)
     .then(auth => {
       dispatch({ type: actionTypes.AUTH_LINK_SUCCESS, payload: auth })
+      return auth
+    })
+    .catch(error => {
+      dispatch({ type: actionTypes.AUTH_LINK_ERROR, error })
+      return Promise.reject(error)
+    })
+}
+
+/**
+ * @description Links the user account with the given credentials. Internally
+ * calls `firebase.auth().currentUser.linkAndRetrieveDataWithCredential`.
+ * @param {Function} dispatch - Action dispatch function
+ * @param {Object} firebase - Internal firebase object
+ * @param {Object} credential - Credential with which to link user account
+ * @return {Promise} Resolves with auth
+ */
+export const linkAndRetrieveDataWithCredential = (dispatch, firebase, credential) => {
+  dispatch({ type: actionTypes.AUTH_LINK_START })
+
+  // reject and dispatch error if not logged in
+  if (!firebase.auth().currentUser) {
+    const error = new Error('User must be logged in to link with credential.')
+    dispatch({ type: actionTypes.AUTH_LINK_ERROR, error })
+    return Promise.reject(error)
+  }
+
+  return firebase
+    .auth()
+    .currentUser.linkAndRetrieveDataWithCredential(credential)
+    .then(auth => {
+      dispatch({ type: actionTypes.AUTH_LINK_SUCCESS, payload: auth.user })
+      return auth
+    })
+    .catch(error => {
+      dispatch({ type: actionTypes.AUTH_LINK_ERROR, error })
+      return Promise.reject(error)
+    })
+}
+
+/**
+ * @description Links the user account with the given provider. Internally
+ * calls `firebase.auth().currentUser.linkWithPopup`.
+ * @param {Function} dispatch - Action dispatch function
+ * @param {Object} firebase - Internal firebase object
+ * @param {Object} provider - Auth provider with which to link user account
+ * @return {Promise} Resolves with auth
+ */
+export const linkWithPopup = (dispatch, firebase, provider) => {
+  dispatch({ type: actionTypes.AUTH_LINK_START })
+
+  // reject and dispatch error if not logged in
+  if (!firebase.auth().currentUser) {
+    const error = new Error('User must be logged in to link with credential.')
+    dispatch({ type: actionTypes.AUTH_LINK_ERROR, error })
+    return Promise.reject(error)
+  }
+
+  return firebase
+    .auth()
+    .currentUser.linkWithPopup(provider)
+    .then(auth => {
+      dispatch({
+        type: actionTypes.AUTH_LINK_SUCCESS,
+        payload: auth.additionalUserInfo.user
+      })
+      return auth
+    })
+    .catch(error => {
+      dispatch({ type: actionTypes.AUTH_LINK_ERROR, error })
+      return Promise.reject(error)
+    })
+}
+
+/**
+ * @description Links the user account with the given provider. Internally
+ * calls `firebase.auth().currentUser.linkWithRedirect`.
+ * @param {Function} dispatch - Action dispatch function
+ * @param {Object} firebase - Internal firebase object
+ * @param {Object} provider - Auth provider with which to link user account
+ * @return {Promise} Resolves with auth
+ */
+export const linkWithRedirect = (dispatch, firebase, provider) => {
+  dispatch({ type: actionTypes.AUTH_LINK_START })
+
+  // reject and dispatch error if not logged in
+  if (!firebase.auth().currentUser) {
+    const error = new Error('User must be logged in to link with credential.')
+    dispatch({ type: actionTypes.AUTH_LINK_ERROR, error })
+    return Promise.reject(error)
+  }
+
+  return firebase
+    .auth()
+    .currentUser.linkWithRedirect(provider)
+    .then(auth => {
+      dispatch({ 
+        type: actionTypes.AUTH_LINK_SUCCESS,
+        payload: auth.additionalUserInfo.user
+      })
       return auth
     })
     .catch(error => {
@@ -924,5 +1024,8 @@ export default {
   updateProfile,
   updateEmail,
   reloadAuth,
+  linkAndRetrieveDataWithCredential,
+  linkWithPopup,
+  linkWithRedirect,
   signInWithPhoneNumber
 }
